@@ -1,2 +1,6 @@
 selenium 
 webdriver-manager
+langchain_groq
+spacy
+langchain
+streamlit
