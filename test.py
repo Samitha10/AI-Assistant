@@ -15,7 +15,7 @@ from langchain_core.prompts import (
 groq_key = os.environ.get("GROQ_KEY")
 
 # Initialize the ChatGroq model
-chat = ChatGroq(temperature=0.7, model_name="Mixtral-8x7b-32768", groq_api_key=groq_key)
+chat = ChatGroq(temperature=0.7, model_name="Llama3-70b-8192", groq_api_key=groq_key)
 
 # Initialize the memory object
 memory_with_user = ConversationBufferWindowMemory(k=5, memory_key="history", return_messages=True)
@@ -61,8 +61,8 @@ def entity_extractor(user_message: str):
         You are a smart and freindly assistant.
         Extract the information product category, gender, age and price from the user message when conversation happens.
         If you got those information from previous chat history remember them and use them.
-        If there is no information for a specific area, make it 'null'.
-        If user is not specifying relevant information, make it 'false'.
+        If there is no information for a specific area, make it '1'.
+        If user is not specifying relevant information, make it '2'.
         Answer must include JSON formated information.
     '''
     human_message = user_message
@@ -114,13 +114,13 @@ def json_extractor(text:str):
 def entity_checker(item):
     null_entities = []
 
-    if item['product_category'] == "None" or item['product_category'] == 'Null' or item['product_category'] == 'null' or item['product_category'] == 'none':
+    if item['product_category'] == "1" or item['product_category'] == '2' :
         null_entities.append('product_category')
-    if item['gender'] == 'None' or item['gender'] == 'Null' or item['gender'] == 'null' or item['gender'] == 'none':
+    if item['gender'] == '1' or item['gender'] == '2' :
         null_entities.append('gender')
-    if item['age'] == 'None' or item['age'] == 'Null' or item['age'] == 'null' or item['age'] == 'none':
+    if item['age'] == '1' or item['age'] == '2' :
         null_entities.append('age')
-    if item['price'] == 'None' or item['price'] == 'Null' or item['price'] == 'null' or item['price'] == 'none':
+    if item['price'] == '1' or item['price'] == '2':
         null_entities.append('price')
 
     return null_entities  # return list of entities if null values exist
@@ -150,25 +150,15 @@ def recomendation_selector(products: dict, item:list):
         return False
 
 
+print(entity_extractor("my name is john"))
+print(entity_extractor("my girlfriend is celebrating her 25th birthday"))
+print(entity_extractor("she loves skin care products"))
+a = entity_extractor("My budget is $300")
+print(a)
 
-def chat_interface():
-    st.header("Spa Cylone")
-    st.sidebar.title('Memory')
-    user_input = st.text_input('Enter your message')
-    if user_input:
-        st.write(chatter(user_input))
-        st.sidebar.markdown('**Extraction from LLM**')
-        a = entity_extractor(user_input)
-        st.sidebar.write(a)
-        st.sidebar.markdown('**Extraction from SpaCy**')
-        b = json_extractor(a)
-        st.sidebar.write(b)
-        st.sidebar.markdown('**Entity Checker**')
-        c = entity_checker(b)
-        st.sidebar.write(c)
-        st.sidebar.markdown('**Recomendation Selector**')
-        lists = recomendation_selector(b, c)
-        st.sidebar.write(lists)
+b = json_extractor(a)
 
-if __name__ == "__main__":
-    chat_interface()
+c = entity_checker(b)
+
+lists = recomendation_selector(b, c)
+print(lists)
