@@ -25,7 +25,12 @@ import pandas as pd
 df = pd.read_csv(
     "product_details.csv"
 )
-agent = create_pandas_dataframe_agent(chat, df, verbose=True)
+agent = create_pandas_dataframe_agent(
+    chat, 
+    df, 
+    verbose=True,
+    agent_type=AgentType.OPENAI_FUNCTIONS,
+)
 
-answer = agent.invoke('give me a list of in stock products price under $15')
+answer = agent.invoke('what are the skin care products')
 print(answer)

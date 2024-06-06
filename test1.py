@@ -1,66 +1,42 @@
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_groq import ChatGroq
-from langchain.memory import ConversationBufferWindowMemory
-from langchain.chains import ConversationChain,LLMChain
-from langchain_core.messages import SystemMessage
-import os, re, json
-import streamlit as st
-from langchain_core.prompts import (
-    ChatPromptTemplate,
-    HumanMessagePromptTemplate,
-    MessagesPlaceholder,)
+import pandas as pd
+import numpy as np
+from langchain_voyageai import VoyageAIEmbeddings
+from langchain_community.vectorstores import FAISS
+
+import os,json
 
 
-# Ensure you have the correct environment variable set
+# # Extract necessary columns
+# df = pd.read_csv("data.csv")
+
+# # Create a new DataFrame with selected columns
+# df = df[['id', 'category', 'categorie']]
+
+# # Convert the DataFrame to a JSON string
+# json_string = df.to_json(orient='records')
+
+# # Write the JSON string to a file
+# with open('output.json', 'w') as f:
+#     f.write(json_string)
+
+
 groq_key = os.environ.get("GROQ_KEY")
+voyage_api_key = os.environ.get("VOYAGE_KEY")
+print(voyage_api_key)
 
-# Initialize the ChatGroq model
-chat = ChatGroq(temperature=0.7, model_name="Llama3-70b-8192", groq_api_key=groq_key)
+embedd_model = VoyageAIEmbeddings(voyage_api_key=voyage_api_key, model="voyage-2")
 
-# Initialize the memory object
-memory_with_user = ConversationBufferWindowMemory(k=5, memory_key="history", return_messages=True)
+# Load the JSON data from the file into a variable
+with open('output.json', 'r') as f:
+    data = json.load(f)
 
-def chatter(user_message: str):
-    system_message = '''
-        You are a smart and freindly assistant.
-        Your prmary goal is to build a friendly conversation to get all the required details stepby step for a product recomendation for cosmetics products.
-        Short and sweet conversation is better.
-        Required details are 'product category', 'gender', 'age' and 'price'.
-    '''
-    human_message = user_message
 
-    # Create the prompt template
-    prompt = ChatPromptTemplate.from_messages(
-        [
-            SystemMessage(content=system_message),  # The persistent system prompt
-            MessagesPlaceholder(variable_name="history"),  # The conversation history
-            HumanMessagePromptTemplate.from_template("{input}"),  # The user's current input
-        ]
-    )
+# Extract categories and ids
+categories = [item["category"] for item in data]
+ids = [item["id"] for item in data]
 
-    # Create the conversation chain
-    chain = ConversationChain(
-        memory=memory_with_user,
-        llm=chat,
-        verbose=False,
-        prompt=prompt,
-    )
-
-    # Predict the answer
-    answer = chain.predict(input=human_message)
-    
-    # Save the context
-    memory_with_user.save_context({"input": human_message}, {"output": answer})
-    
-    return answer
-
-def memLoader():
-    mem = memory_with_user.load_memory_variables({})
-    return mem
-
-def chat_interface():
-    print(chatter("what is 10+15"))
-    print(chatter("Then substract 5"))
-    print(chatter("now devide by 2"))
-
-chat_interface()
+embeddings = embedd_model.embed_documents(categories)
+vcstore = FAISS.add_embeddings(
+    text_embeddings=embeddings,
+    ids=ids,
+)
