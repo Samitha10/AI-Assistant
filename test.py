@@ -10,7 +10,7 @@ from langchain_core.prompts import (
     HumanMessagePromptTemplate,
     MessagesPlaceholder,)
 
-
+from test1 import similarity_search
 # Ensure you have the correct environment variable set
 groq_key = os.environ.get("GROQ_KEY")
 
@@ -24,10 +24,10 @@ memory_of_entity = ConversationBufferWindowMemory(k=5, memory_key="history", ret
 def chatter(user_message: str):
     system_message = '''
         You are a smart and freindly assistant.
-        Your prmary goal is to build a friendly conversation to get all the required details stepby step for a product recomendation for cosmetics products.
+        Your primary goal is to build a friendly conversation to get all the required details stepby step for a product recomendation for cosmetics products.
         Short and sweet conversation is better.
-        Required details are 'product category', 'gender', 'age' and 'price'.
-        If user has provided them in chat history, rememeber them and use them.
+        Required details are 'product_category', 'gender', 'price'.
+        If your goal is complete, just say 'Thank you'
     '''
     human_message = user_message
 
@@ -53,17 +53,16 @@ def chatter(user_message: str):
     
     # Save the context
     memory_with_user.save_context({"input": human_message}, {"output": answer})
-    
     return answer
 
 def entity_extractor(user_message: str):
     system_message = '''
-        You are a smart and freindly assistant.
-        Extract the information product category, gender, age and price from the user message when conversation happens.
+        You are a smart assistant.
+        Extract the information 'product_category : string', 'gender: string', 'price: integer' from the user message when conversation happens.
         If you got those information from previous chat history remember them and use them.
-        If there is no information for a specific area, make it '1'.
-        If user is not specifying relevant information, make it '2'.
-        Answer must include JSON formated information.
+        If there is no information for a specific area yet, make it 'flag_1'.
+        If user is not specifying relevant information for the area, make it 'flag_2'.
+        Answer must include JSON formated information. Do not provide additional content in the answer
     '''
     human_message = user_message
 
@@ -88,8 +87,8 @@ def entity_extractor(user_message: str):
     answer = chain.predict(input=human_message)
     
     # Save the context
-    memory_with_user.save_context({"input": human_message}, {"output": answer})
-    
+    memory_of_entity.save_context({"input": human_message}, {"output": answer})
+
     return answer
 
 def json_extractor(text:str):
@@ -113,17 +112,14 @@ def json_extractor(text:str):
     
 def entity_checker(item):
     null_entities = []
-
-    if item['product_category'] == "1" or item['product_category'] == '2' :
+    if item['product_category'] == 'flag_1':
         null_entities.append('product_category')
-    if item['gender'] == '1' or item['gender'] == '2' :
+    
+    if item['gender'] == 'flag_1':
         null_entities.append('gender')
-    if item['age'] == '1' or item['age'] == '2' :
-        null_entities.append('age')
-    if item['price'] == '1' or item['price'] == '2':
+    if item['price'] == 'flag_1':
         null_entities.append('price')
-
-    return null_entities  # return list of entities if null values exist
+    return null_entities
 
 def filter(item:list):
     if not item:
@@ -139,8 +135,6 @@ def recomendation_selector(products: dict, item:list):
             product_list.append(products['product_category'])
         if products['gender'] != 'false' or products['gender'] != 'False':
             product_list.append(products['gender'])
-        if products['age'] != 'false' or products['age'] != 'False':
-            product_list.append(products['age'])
         if products['price'] != 'false' or products['price'] != 'False':
             product_list.append(products['price'])
 
@@ -149,16 +143,68 @@ def recomendation_selector(products: dict, item:list):
         print("There are null entities in the item")
         return False
 
+def recomender(products: list):
+    try:
+        category = products[0]
+        gender = products[1]
+        price = products[2]
+        
+        # Perform the search based on the extracted information
+        results = similarity_search(category,'category' )
+        for doc
+    except Exception as e:
+        print(e)
 
-print(entity_extractor("my name is john"))
-print(entity_extractor("my girlfriend is celebrating her 25th birthday"))
-print(entity_extractor("she loves skin care products"))
-a = entity_extractor("My budget is $300")
-print(a)
 
-b = json_extractor(a)
 
-c = entity_checker(b)
 
-lists = recomendation_selector(b, c)
-print(lists)
+def main():
+    st.subheader("Spa Cylone", divider="rainbow", anchor=False)
+    st.sidebar.title("Output")
+    
+        # Initialize chat history if not already done
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+    if "chatter" not in st.session_state:
+        st.session_state.chatter = chatter
+    if "entity_extractor" not in st.session_state:
+        st.session_state.entity_extractor = entity_extractor
+
+    # Display chat messages from history on app rerun
+    for message in st.session_state.messages:
+        avatar = "🤖" if message["role"] == "assistant" else "👨‍💻"
+        with st.chat_message(message["role"], avatar=avatar):
+            st.write(message["content"])
+    
+    prompt = st.chat_input("Enter your prompt here...")
+
+    if prompt:
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user", avatar="👨‍💻"):
+                st.markdown(prompt)
+        response = st.session_state.chatter(prompt)
+
+        # Add the responses to the chat history
+        st.session_state.messages.append({"role": "assistant", "content": response})
+        with st.chat_message("assistant", avatar="🤖"):
+            st.write(response)
+
+        st.sidebar.markdown('## entity extractor')
+        a = st.session_state.entity_extractor(prompt)
+        st.sidebar.write(a)
+        st.sidebar.markdown('## json extractor')
+        b = json_extractor(a)
+        st.sidebar.write(b)
+        st.sidebar.markdown('## entity checker')
+        c = entity_checker(b)
+        st.sidebar.write(c)
+        st.sidebar.markdown('## recomendation selector')
+        d = recomendation_selector(b, c)
+        st.sidebar.write(d)
+        if d != False:
+            st.sidebar.markdown('## recomender')
+            e = recomender(d)
+            st.sidebar.write(e)
+
+
+main()

@@ -4,3 +4,7 @@ langchain_groq
 spacy
 langchain
 streamlit
+langchain-experimental
+tabulate
+langchain_voyageai
+gradio
