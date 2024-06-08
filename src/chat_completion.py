@@ -10,12 +10,19 @@ from langchain_core.prompts import (
     HumanMessagePromptTemplate,
     MessagesPlaceholder,)
 
-from test1 import similarity_search
+from src.product_search import similarity_search
+from src.image_retriver import image_tracker
+from utils.logger import logging
+from utils.exception import CustomException
+
+logging.info('Packages are imported successfully')  
+
 # Ensure you have the correct environment variable set
 groq_key = os.environ.get("GROQ_KEY")
-
 # Initialize the ChatGroq model
 chat = ChatGroq(temperature=0.7, model_name="Llama3-70b-8192", groq_api_key=groq_key)
+
+logging.info('Intialize LLM successfully')
 
 # Initialize the memory object
 memory_with_user = ConversationBufferWindowMemory(k=5, memory_key="history", return_messages=True)
@@ -30,6 +37,7 @@ def chatter(user_message: str):
         If your goal is complete, just say 'Thank you'
     '''
     human_message = user_message
+
 
     # Create the prompt template
     prompt = ChatPromptTemplate.from_messages(
@@ -151,16 +159,20 @@ def recomender(products: list):
         
         # Perform the search based on the extracted information
         results = similarity_search(category,'category' )
-        for doc
+        output = []
+        for doc, score in results:
+            output.append({doc.metadata['id']})
+        output = [item for sublist in output for item in sublist]
+        return output
+        
     except Exception as e:
         print(e)
-
-
-
+        return False
 
 def main():
     st.subheader("Spa Cylone", divider="rainbow", anchor=False)
     st.sidebar.title("Output")
+
     
         # Initialize chat history if not already done
     if "messages" not in st.session_state:
@@ -205,6 +217,12 @@ def main():
             st.sidebar.markdown('## recomender')
             e = recomender(d)
             st.sidebar.write(e)
+            image_list, url_list = image_tracker(e)
+            # image_paths = ['product_images/' + name for name in image_list]
+            # st.sidebar.image(image_paths)
+            st.sidebar.markdown('## URL list')
+            st.sidebar.write(url_list)
+
 
 
 main()

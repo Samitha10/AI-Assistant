@@ -47,7 +47,7 @@ def similarity_search(quection:str, column:str):
     new_db = FAISS.load_local(store, embedd_model,allow_dangerous_deserialization=True)
 
     embedd_query = embedd_model.embed_query(quection)
-    result = new_db.similarity_search_with_score_by_vector(embedding=embedd_query, k=10)
+    result = new_db.similarity_search_with_score_by_vector(embedding=embedd_query, k=5, fetch_k=5)
 
     # Print to terminal
     for doc, score in result:
@@ -58,5 +58,3 @@ def similarity_search(quection:str, column:str):
             f.write(f"Document ID: {doc.metadata['id']}, Page Content: {doc.page_content}, Score: {score}\n")
     return result
 
-# Run the function
-similarity_search("trio collection box", "description")
