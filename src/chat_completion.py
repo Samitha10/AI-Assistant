@@ -3,15 +3,18 @@ from langchain_groq import ChatGroq
 from langchain.memory import ConversationBufferWindowMemory
 from langchain.chains import ConversationChain
 from langchain_core.messages import SystemMessage
-import os, re, json
+import os, re, json, sys
 import streamlit as st
 from langchain_core.prompts import (
     ChatPromptTemplate,
     HumanMessagePromptTemplate,
     MessagesPlaceholder,)
 
-from src.product_search import similarity_search
-from src.image_retriver import image_tracker
+from product_search import similarity_search
+from image_retriver import image_tracker
+
+# Add the project root to the PYTHONPATH
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.logger import logging
 from utils.exception import CustomException
 
@@ -29,133 +32,161 @@ memory_with_user = ConversationBufferWindowMemory(k=5, memory_key="history", ret
 memory_of_entity = ConversationBufferWindowMemory(k=5, memory_key="history", return_messages=True)
 
 def chatter(user_message: str):
-    system_message = '''
-        You are a smart and freindly assistant.
-        Your primary goal is to build a friendly conversation to get all the required details stepby step for a product recomendation for cosmetics products.
-        Short and sweet conversation is better.
-        Required details are 'product_category', 'gender', 'price'.
-        If your goal is complete, just say 'Thank you'
-    '''
-    human_message = user_message
+    try:
+        if user_message == "":
+            logging.info('User message is empty')
+            raise CustomException("User message is empty")
+        system_message = '''
+            You are a smart and freindly assistant.
+            Your primary goal is to build a friendly conversation to get all the required details stepby step for a product recomendation for cosmetics products.
+            Short and sweet conversation is better.
+            Required details are 'product_category', 'gender', 'price'.
+            If your goal is complete, just say 'Thank you'
+        '''
+        human_message = user_message
 
 
-    # Create the prompt template
-    prompt = ChatPromptTemplate.from_messages(
-        [
-            SystemMessage(content=system_message),  # The persistent system prompt
-            MessagesPlaceholder(variable_name="history"),  # The conversation history
-            HumanMessagePromptTemplate.from_template("{input}"),  # The user's current input
-        ]
-    )
+        # Create the prompt template
+        prompt = ChatPromptTemplate.from_messages(
+            [
+                SystemMessage(content=system_message),  # The persistent system prompt
+                MessagesPlaceholder(variable_name="history"),  # The conversation history
+                HumanMessagePromptTemplate.from_template("{input}"),  # The user's current input
+            ]
+        )
 
-    # Create the conversation chain
-    chain = ConversationChain(
-        memory=memory_with_user,
-        llm=chat,
-        verbose=False,
-        prompt=prompt,
-    )
+        # Create the conversation chain
+        chain = ConversationChain(
+            memory=memory_with_user,
+            llm=chat,
+            verbose=False,
+            prompt=prompt,
+        )
 
-    # Predict the answer
-    answer = chain.predict(input=human_message)
-    
-    # Save the context
-    memory_with_user.save_context({"input": human_message}, {"output": answer})
-    return answer
+        # Predict the answer
+        answer = chain.predict(input=human_message)
+        
+        # Save the context
+        memory_with_user.save_context({"input": human_message}, {"output": answer})
+        logging.info(f'User message: {user_message}, Answer: {answer}')
+        logging.info('Chatter completed successfully')
+        return answer
+    except Exception as e:
+        logging.info(e)
+        raise CustomException(e,sys)
 
 def entity_extractor(user_message: str):
-    system_message = '''
-        You are a smart assistant.
-        Extract the information 'product_category : string', 'gender: string', 'price: integer' from the user message when conversation happens.
-        If you got those information from previous chat history remember them and use them.
-        If there is no information for a specific area yet, make it 'flag_1'.
-        If user is not specifying relevant information for the area, make it 'flag_2'.
-        Answer must include JSON formated information. Do not provide additional content in the answer
-    '''
-    human_message = user_message
+    try:
+        if user_message ==  "":
+            logging.info('User message is empty')
+            raise CustomException("User message is empty")
+        system_message = '''
+            You are a smart assistant.
+            Extract the information 'product_category : string', 'gender: string', 'price: integer' from the user message when conversation happens.
+            If there is some information about the product, add 'product_description: string' in the answer
+            If you got those information from previous chat history remember them and use them.
+            If there is no information for a specific area yet, make it 'flag_1'.
+            If user is not specifying relevant information for the area, make it 'flag_2'.
+            Answer must include JSON formated information. Do not provide additional content in the answer
+        '''
+        human_message = user_message
 
-    # Create the prompt template
-    prompt = ChatPromptTemplate.from_messages(
-        [
-            SystemMessage(content=system_message),  # The persistent system prompt
-            MessagesPlaceholder(variable_name="history"),  # The conversation history
-            HumanMessagePromptTemplate.from_template("{input}"),  # The user's current input
-        ]
-    )
+        # Create the prompt template
+        prompt = ChatPromptTemplate.from_messages(
+            [
+                SystemMessage(content=system_message),  # The persistent system prompt
+                MessagesPlaceholder(variable_name="history"),  # The conversation history
+                HumanMessagePromptTemplate.from_template("{input}"),  # The user's current input
+            ]
+        )
 
-    # Create the conversation chain
-    chain = ConversationChain(
-        memory=memory_of_entity,
-        llm=chat,
-        verbose=False,
-        prompt=prompt,
-    )
+        # Create the conversation chain
+        chain = ConversationChain(
+            memory=memory_of_entity,
+            llm=chat,
+            verbose=False,
+            prompt=prompt,
+        )
 
-    # Predict the answer
-    answer = chain.predict(input=human_message)
-    
-    # Save the context
-    memory_of_entity.save_context({"input": human_message}, {"output": answer})
-
-    return answer
+        # Predict the answer
+        answer = chain.predict(input=human_message)
+        
+        # Save the context
+        memory_of_entity.save_context({"input": human_message}, {"output": answer})
+        logging.info(f'User message: {user_message}, Answer: {answer}')
+        logging.info('Entity extractor completed successfully')
+        return answer
+    except Exception as e:
+        logging.info(e)
+        raise CustomException(e, sys)
 
 def json_extractor(text:str):
-    json_pattern = re.compile(r'\{.*?\}', re.DOTALL)
-    json_matches = json_pattern.findall(text)
+    try:
+        json_pattern = re.compile(r'\{.*?\}', re.DOTALL)
+        json_matches = json_pattern.findall(text)
 
-    # Initialize a list to hold the extracted JSON objects
-    json_data = []
+        # Initialize a list to hold the extracted JSON objects
+        json_data = []
 
-    # Parse each JSON section and add it to the list
-    for match in json_matches:
-        try:
-            json_obj = json.loads(match)
-            json_data.append(json_obj)
-        except json.JSONDecodeError as e:
-            print(f"Error decoding JSON: {e}")
+        # Parse each JSON section and add it to the list
+        for match in json_matches:
+            try:
+                json_obj = json.loads(match)
+                json_data.append(json_obj)
+            except json.JSONDecodeError as e:
+                print(f"Error decoding JSON: {e}")
 
-    # Print the extracted JSON data
-    for item in json_data:
-        return item
+        # Print the extracted JSON data
+        for item in json_data:
+            return item
+        logging.info(f'Extracted JSON data: {json_data}')
+    except Exception as e:
+        logging.info(e)
+        raise CustomException(e,sys)
     
 def entity_checker(item):
-    null_entities = []
+    null_entities = {}
     if item['product_category'] == 'flag_1':
-        null_entities.append('product_category')
-    
+        null_entities['product_category'] = 'flag_1'
     if item['gender'] == 'flag_1':
-        null_entities.append('gender')
+        null_entities['gender'] = 'flag_1'
     if item['price'] == 'flag_1':
-        null_entities.append('price')
+        null_entities['price'] = 'flag_1'
+    logging.info('Null entities: ', null_entities)
+    logging.info('Entity checker completed successfully')
     return null_entities
 
-def filter(item:list):
-    if not item:
+def filter(item:dict):
+    if len(item) == 0:
         return True
     else:
         return False
 
 
-def recomendation_selector(products: dict, item:list):
-    product_list=[]
+def recomendation_selector(products: dict, item:dict):
+    info_dict={}
     if filter(item) == True:
-        if products['product_category'] != 'false' or products['product_category'] != 'False':
-            product_list.append(products['product_category'])
-        if products['gender'] != 'false' or products['gender'] != 'False':
-            product_list.append(products['gender'])
-        if products['price'] != 'false' or products['price'] != 'False':
-            product_list.append(products['price'])
-
-        return product_list
+        if products['product_category'] != 'flag_1' :
+            info_dict['product_category'] = products['product_category']
+        if products['gender'] != 'flag_1':
+            info_dict['gender'] = products['gender']
+        if products['price'] != 'flag_1':
+            info_dict['price'] = products['price']
+        if products['product_description'] != 'flag_1':
+            info_dict['product_description'] = products['product_description']
+        logging.info('Recomendation selector: ', info_dict)
+        logging.info('Recomendation selector completed successfully')
+        return info_dict
     else:
         print("There are null entities in the item")
+        logging.info('There are null entities in the item')
         return False
 
-def recomender(products: list):
+def recomender(products: dict):
     try:
-        category = products[0]
-        gender = products[1]
-        price = products[2]
+        category = products['product_category']
+        gender = products['gender']
+        price = products['price']
         
         # Perform the search based on the extracted information
         results = similarity_search(category,'category' )
@@ -163,6 +194,7 @@ def recomender(products: list):
         for doc, score in results:
             output.append({doc.metadata['id']})
         output = [item for sublist in output for item in sublist]
+        print(output)
         return output
         
     except Exception as e:

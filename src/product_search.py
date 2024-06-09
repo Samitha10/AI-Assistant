@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-import os,json
+import os,json, sys
 from langchain_voyageai import VoyageAIEmbeddings
 from langchain_community.vectorstores import FAISS
 
@@ -23,6 +23,8 @@ def jsonize_data():
         f.write(json_string)
     print("JSON file created successfully!")
 
+
+
 # Save vector store
 def save_vector_store(column:str):
     embedd_model = VoyageAIEmbeddings(voyage_api_key=voyage_api_key, model="voyage-2")
@@ -43,7 +45,8 @@ def save_vector_store(column:str):
 def similarity_search(quection:str, column:str):
     embedd_model = VoyageAIEmbeddings(voyage_api_key=voyage_api_key, model="voyage-2")
 
-    store = f'artifacts/vcstore_{column}'
+    # Get the absolute path to the file
+    store = os.path.join(os.path.dirname(__file__), '..', 'artifacts', f'vcstore_{column}')
     new_db = FAISS.load_local(store, embedd_model,allow_dangerous_deserialization=True)
 
     embedd_query = embedd_model.embed_query(quection)
@@ -53,8 +56,10 @@ def similarity_search(quection:str, column:str):
     for doc, score in result:
         print(f"Document ID: {doc.metadata['id']}, Page Content: {doc.page_content}, Score: {score}")
     # Save to text file
-    with open(''f'artifacts/results_{column}.txt', 'w') as f:
+    path = os.path.join(os.path.dirname(__file__), '..', 'artifacts', f'results_{column}.txt')
+    with open(path, 'w') as f:
         for doc, score in result:
             f.write(f"Document ID: {doc.metadata['id']}, Page Content: {doc.page_content}, Score: {score}\n")
     return result
 
+similarity_search('lip balms','category')
