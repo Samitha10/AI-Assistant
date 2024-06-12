@@ -1,12 +1,23 @@
-Document ID: p126, Page Content: A trio collection box of Citronella Milk Protective Mist.
-* Effective natural protection in tropical climates.
-* Hydrates insect bites & inflammations., Score: 0.5267529487609863
-Document ID: p7, Page Content: Description not available, Score: 0.6750602126121521
-Document ID: p10, Page Content: Description not available, Score: 0.6750602126121521
-Document ID: p16, Page Content: Description not available, Score: 0.6750602126121521
-Document ID: p17, Page Content: Description not available, Score: 0.6750602126121521
-Document ID: p18, Page Content: Description not available, Score: 0.6750602126121521
-Document ID: p48, Page Content: Description not available, Score: 0.6750602126121521
-Document ID: p50, Page Content: Description not available, Score: 0.6750602126121521
-Document ID: p61, Page Content: Description not available, Score: 0.6750602126121521
-Document ID: p107, Page Content: Description not available, Score: 0.6751532554626465
+Document ID: p76, Page Content: A rich natural formula with a hydrating blend of herbs & floral extracts to moisturise, nourish & care. Olive, Wheatgerm & Rice Bran help hydrate & promote moisture retention., Score: 0.5246368646621704
+Document ID: p194, Page Content: 100% pure natural essential oil distilled at source. Carefully processed to ensure rich natural aroma & benefits are preserved in every drop., Score: 0.5250157117843628
+Document ID: p298, Page Content: 100% pure natural essential oil distilled at source. Carefully processed to ensure rich natural aroma & benefits are preserved in every drop., Score: 0.5250356197357178
+Document ID: p173, Page Content: A natural illuminating treatment enriched with precious Tuberose oil to gently brighten. Arnica, Rice Bran & natural vitamins help improve skin tone, while Avocado, Wheatgerm & White Minerals help protect from the sun., Score: 0.5263599753379822
+Document ID: p137, Page Content: A natural renewing treatment enriched with a revitalising blend of precious herbal oils. Sweet Almond, Wheatgerm, Soya & Virgin Coconut moisturise, nourish & care for dry & rough hands., Score: 0.5323365926742554
+Document ID: p192, Page Content: 100% pure natural essential oil distilled at source. Carefully processed to ensure rich natural aroma & benefits are preserved in every drop.
+Soothing
+Warming
+Energising, Score: 0.5324282646179199
+Document ID: p296, Page Content: 100% pure natural essential oil distilled at source. Carefully processed to ensure rich natural aroma & benefits are preserved in every drop.
+Soothing
+Warming
+Energising, Score: 0.5325404405593872
+Document ID: p193, Page Content: 100% pure natural essential oil distilled at source. Carefully processed to ensure rich natural aroma & benefits are preserved in every drop.
+Soothing
+Refreshing
+Balancing, Score: 0.5328191518783569
+Document ID: p297, Page Content: 100% pure natural essential oil distilled at source. Carefully processed to ensure rich natural aroma & benefits are preserved in every drop.
+Soothing
+Refreshing
+Balancing, Score: 0.532861590385437
+Document ID: p35, Page Content: 100% Natural Mineral Colour
+An ultra-rich natural blend of Virgin Coconut, Cocoa, Mango & Kokum butters & cold-pressed Almond, Rice Bran, Avocado & Wheatgerm oils to treat, moisturise, soften & smoothen lips., Score: 0.5333484411239624

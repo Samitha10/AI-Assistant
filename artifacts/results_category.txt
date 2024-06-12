@@ -1,5 +1,5 @@
-Document ID: p217, Page Content: hair care  bath & shower, Score: 0.32795336842536926
-Document ID: p218, Page Content: hair care  bath & shower, Score: 0.32795336842536926
-Document ID: p219, Page Content: hair care  bath & shower, Score: 0.32795336842536926
-Document ID: p223, Page Content: hair care  bath & shower, Score: 0.32795336842536926
-Document ID: p226, Page Content: hair care  bath & shower, Score: 0.32795336842536926
+Document ID: p66, Page Content: skin care  comfort, Score: 0.5351611375808716
+Document ID: p11, Page Content: skin care  face care, Score: 0.5571321249008179
+Document ID: p13, Page Content: skin care  face care, Score: 0.5571321249008179
+Document ID: p15, Page Content: skin care  skin wellness, Score: 0.5618281960487366
+Document ID: p30, Page Content: skin care  true turmeric, Score: 0.5676794052124023
