@@ -1,6 +1,6 @@
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_groq import ChatGroq
-from langchain.memory import ConversationBufferWindowMemory
+from langchain.memory import ConversationBufferWindowMemory, ConversationBufferMemory
 from langchain.chains import ConversationChain
 from langchain_core.messages import SystemMessage
 import os, re, json, sys
@@ -27,8 +27,8 @@ chat = ChatGroq(temperature=0.7, model_name="Llama3-70b-8192", groq_api_key=groq
 logging.info('Intialize LLM successfully')
 
 # Initialize the memory object
-memory_with_user = ConversationBufferWindowMemory(k=5, memory_key="history", return_messages=True)
-memory_of_entity = ConversationBufferWindowMemory(k=5, memory_key="history", return_messages=True)
+memory_with_user = ConversationBufferMemory(memory_key="history", return_messages=True)
+memory_of_entity = ConversationBufferMemory(memory_key="history", return_messages=True)
 
 entities = ['product_category', 'gender', 'price']
 
@@ -41,7 +41,7 @@ def chatter(user_message: str):
             logging.info('User message is empty')
             raise CustomException("User message is empty")
         system_message = '''
-            You are a smart and freindly assistant.
+            You are a smart and freindly customer care agent
             Your primary goal is to build a friendly conversation cunningly to get all the required details stepby step for a product recomendation for cosmetics products.
             Short and sweet conversation is better.
             Required details are about {items}.
@@ -95,6 +95,7 @@ def entity_extractor(user_message: str):
             If user is not specifyiny or concerning about the information, make it 'flag_2'.
             Carefully choose between 'flag_1' and 'flag_2'.
             Do not hesitate to update as 'flag_2' when user is rejecting them, when conversation happens.
+            Do not hesitate to update product description as well.
             Answer must include JSON formated information. Do not provide additional content in the answer
         '''
         human_message = user_message
