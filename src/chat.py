@@ -1,6 +1,10 @@
+import os,sys
+# Add the project root to the PYTHONPATH
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_groq import ChatGroq
-from langchain.memory import ConversationBufferWindowMemory, ConversationBufferMemory
+from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationChain
 from langchain_core.messages import SystemMessage
 import os, re, json, sys
@@ -9,10 +13,6 @@ from langchain_core.prompts import (
     ChatPromptTemplate,
     HumanMessagePromptTemplate,
     MessagesPlaceholder,)
-
-# Add the project root to the PYTHONPATH
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 from src.recommender import recomendation_selector, recomender
 from utils.logger import logging
 from utils.exception import CustomException
@@ -22,7 +22,7 @@ logging.info('Packages are imported successfully')
 # Ensure you have the correct environment variable set
 groq_key = os.environ.get("GROQ_KEY")
 # Initialize the ChatGroq model
-chat = ChatGroq(temperature=0.7, model_name="Llama3-70b-8192", groq_api_key=groq_key)
+chat = ChatGroq(temperature=0.9, model_name="Llama3-70b-8192", groq_api_key=groq_key)
 
 logging.info('Intialize LLM successfully')
 
@@ -173,52 +173,51 @@ def entity_checker(item):
     return null_entities
 
 
-def main():
-    st.subheader("Spa Cylone", divider="rainbow", anchor=False)
-    st.sidebar.title("Output")
+# def stchat():
+#     st.subheader("Spa Cylone", divider="rainbow", anchor=False)
+#     st.sidebar.title("Output")
     
-        # Initialize chat history if not already done
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
-    if "chatter" not in st.session_state:
-        st.session_state.chatter = chatter
-    if "entity_extractor" not in st.session_state:
-        st.session_state.entity_extractor = entity_extractor
+#         # Initialize chat history if not already done
+#     if "messages" not in st.session_state:
+#         st.session_state.messages = []
+#     if "chatter" not in st.session_state:
+#         st.session_state.chatter = chatter
+#     if "entity_extractor" not in st.session_state:
+#         st.session_state.entity_extractor = entity_extractor
 
-    # Display chat messages from history on app rerun
-    for message in st.session_state.messages:
-        avatar = "🤖" if message["role"] == "assistant" else "👨‍💻"
-        with st.chat_message(message["role"], avatar=avatar):
-            st.write(message["content"])
+#     # Display chat messages from history on app rerun
+#     for message in st.session_state.messages:
+#         avatar = "🤖" if message["role"] == "assistant" else "👨‍💻"
+#         with st.chat_message(message["role"], avatar=avatar):
+#             st.write(message["content"])
     
-    prompt = st.chat_input("Enter your prompt here...")
+#     prompt = st.chat_input("Enter your prompt here...")
 
-    if prompt:
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user", avatar="👨‍💻"):
-                st.markdown(prompt)
-        response = st.session_state.chatter(user_message=prompt)
+#     if prompt:
+#         st.session_state.messages.append({"role": "user", "content": prompt})
+#         with st.chat_message("user", avatar="👨‍💻"):
+#                 st.markdown(prompt)
+#         response = st.session_state.chatter(user_message=prompt)
 
-        # Add the responses to the chat history
-        st.session_state.messages.append({"role": "assistant", "content": response})
-        with st.chat_message("assistant", avatar="🤖"):
-            st.write(response)
+#         # Add the responses to the chat history
+#         st.session_state.messages.append({"role": "assistant", "content": response})
+#         with st.chat_message("assistant", avatar="🤖"):
+#             st.write(response)
 
-        st.sidebar.markdown('## entity extractor')
-        a = st.session_state.entity_extractor(prompt)
-        st.sidebar.write(a)
-        st.sidebar.markdown('## json extractor')
-        b = json_extractor(a)
-        st.sidebar.write(b)
-        st.sidebar.markdown('## entity checker')
-        c = entity_checker(b)
-        st.sidebar.write(c)
-        st.sidebar.markdown('## recomendation selector')
-        d = recomendation_selector(b, c)
-        st.sidebar.write(d)
-        if d != False:
-            st.sidebar.markdown('## recomender')
-            print(recomender(d))
-            st.sidebar.write(recomender(d))
-
-main()
+#         st.sidebar.markdown('## entity extractor')
+#         a = st.session_state.entity_extractor(prompt)
+#         st.sidebar.write(a)
+#         st.sidebar.markdown('## json extractor')
+#         b = json_extractor(a)
+#         st.sidebar.write(b)
+#         st.sidebar.markdown('## entity checker')
+#         c = entity_checker(b)
+#         st.sidebar.write(c)
+#         st.sidebar.markdown('## recomendation selector')
+#         d = recomendation_selector(b, c)
+#         st.sidebar.write(d)
+#         if d != False:
+#             st.sidebar.markdown('## recomender')
+#             print(recomender(d))
+#             st.sidebar.write(recomender(d))
+# stchat()

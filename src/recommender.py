@@ -1,10 +1,29 @@
-from product_search import similarity_search
-import os,sys
+import os
+import sys
 # Add the project root to the PYTHONPATH
-# sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.logger import logging
 from utils.exception import CustomException
+import pandas as pd
 from src.cases import case_1,case_2,case_3,case_4,case_5,case_6,case_7,case_8,case_9,case_10,case_11,case_12,case_13,case_14,case_15,case_16
+from src.data_processor import data_file_importer
+
+data = data_file_importer()
+
+def chatCompletionChecker(sentence):
+    sentence = sentence.lower()
+    if 'thank you' in sentence or 'thanks' in sentence or 'thank' in sentence or 'thankyou' in sentence or 'thanksyou' in sentence:
+        return True
+    else:
+        return False
+def nameExtractor(item:list):
+    df = data
+    names = []
+    for id in item:
+        name = df[df['id'] == id]['product_name'].values[0]
+        names.append(name)
+    return names
+
 
 def filters(item:dict):
     if len(item) == 0:
@@ -122,3 +141,6 @@ def recomender(item:dict):
     # No Elements
     if case_checker(item) == 16:
         logging.info('Case 16')
+
+
+

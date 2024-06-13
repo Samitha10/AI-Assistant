@@ -1,10 +1,5 @@
-selenium 
-webdriver-manager
 langchain_groq
-spacy
-langchain
-streamlit
-langchain-experimental
-tabulate
 langchain_voyageai
-gradio
+langchain
+langchain_core
+streamlit

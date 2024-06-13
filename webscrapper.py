@@ -10,7 +10,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
-
+# selenium 
+# webdriver-manager
 def get_data(website: str):
     # Create a directory to save the images
     if not os.path.exists('product_images'):

@@ -1,6 +1,9 @@
+import json
+import os,sys
+# Add the project root to the PYTHONPATH
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import pandas as pd
-import numpy as np
-import os,json, sys
 from langchain_voyageai import VoyageAIEmbeddings
 from langchain_community.vectorstores import FAISS
 from src.data_processor import data_file_importer
@@ -67,9 +70,6 @@ def similarity_search(quection:str, column:str,k:int,fetch_k:int):
     #     for doc, score in result:
     #         f.write(f"Document ID: {doc.metadata['id']}, Page Content: {doc.page_content}, Score: {score}\n")
     return result
-
-
-
 
 
 def id_extractor(dict1:dict, dict2:dict,count:int):

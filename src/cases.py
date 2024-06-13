@@ -1,10 +1,10 @@
 import os,sys
 # Add the project root to the PYTHONPATH
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from product_search import id_extractor, similarity_search
+
 from utils.logger import logging
 from utils.exception import CustomException
-from src.product_search import price_filter, similarity_search
+from src.product_search import price_filter, similarity_search, id_extractor
 from src.data_processor import data_file_importer
 
 def case_1(item:dict):
