@@ -9,7 +9,7 @@ from langchain_community.vectorstores import FAISS
 from src.data_processor import data_file_importer
 from functools import lru_cache
 
-voyage_api_key = os.environ.get("VOYAGE_KEY")
+
 
 # Creating JSON files from CSV
 def jsonize_data():
@@ -29,6 +29,7 @@ def jsonize_data():
 
 # Save vector store
 def save_vector_store(column:str):
+    voyage_api_key = os.environ.get("VOYAGE_KEY")
     embedd_model = VoyageAIEmbeddings(voyage_api_key=voyage_api_key, model="voyage-2")
 
     # Load the JSON data from the file into a variable
@@ -45,6 +46,7 @@ def save_vector_store(column:str):
 
 @lru_cache(maxsize=128, typed=False)
 def model_loader():
+    voyage_api_key = os.environ.get("VOYAGE_KEY")
     embedd_model = VoyageAIEmbeddings(voyage_api_key=voyage_api_key, model="voyage-2")
     return embedd_model
 
@@ -105,8 +107,8 @@ def price_filter(ids: list, price, range: int):
     df = data_file_importer()
     results = []
 
-    # Check if price is an integer
-    if not isinstance(price, float):
+    # Check if price is a numeric value (float or int)
+    if not isinstance(price, (float, int)):
         return [True] * len(ids)
 
     for id in ids:
@@ -120,3 +122,14 @@ def price_filter(ids: list, price, range: int):
             results.append(False)  # Assuming IDs not found should be marked False
 
     return results
+
+def price_extractor(ids: list):
+    df = data_file_importer()
+    results = []
+
+    for id in ids:
+        if id in df['id'].values:
+            id_price = df.loc[df['id'] == id, 'price'].values[0]
+            results.append(id_price)
+    return results
+

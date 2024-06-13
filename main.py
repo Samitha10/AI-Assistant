@@ -10,7 +10,7 @@ from src.chat import json_extractor
 from src.chat import entity_checker
 from src.recommender import recomendation_selector
 from src.recommender import recomender, chatCompletionChecker, nameExtractor
-
+from src.product_search import price_extractor
 
 def stchat():
     st.subheader("Spa Cylone", divider="rainbow", anchor=False)
@@ -58,8 +58,9 @@ def stchat():
         st.sidebar.write(d)
         if d != False and completion == True:
             st.sidebar.markdown('## recomender')
-            e_id,e_price = recomender(d)
+            e_id,e_status = recomender(d)
             e_name = nameExtractor(e_id)
+            e_price = price_extractor(e_id)
             e_list = dict(zip(e_name, e_price))
             st.session_state.messages.append({"role": "assistant", "content": e_list})
             with st.chat_message("assistant", avatar="🤖"):
