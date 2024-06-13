@@ -1,11 +1,11 @@
 import os,sys
 # Add the project root to the PYTHONPATH
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from product_search import similarity_search
+from product_search import id_extractor, similarity_search
 from utils.logger import logging
 from utils.exception import CustomException
-from product_search import id_extractor,price_filter
-from data_processor import data_file_importer
+from src.product_search import price_filter, similarity_search
+from src.data_processor import data_file_importer
 
 def case_1(item:dict):
     category = item['product_category'] + ' ' + item['gender']
@@ -34,15 +34,16 @@ def case_1(item:dict):
 def case_2(item:dict):
     category = item['product_category'] + ' ' + item['gender']
     price = item['price']
+    logging.info('Items are extracted successfully')
     
     # Perform similarity search based on the category
     items1 = similarity_search(category, 'category',5,20)
     ids = []
     for doc, score in items1:
-        ids.append({doc.metadata['id']})
-    
+        ids.append(doc.metadata['id'])
+    logging.info('IDs are extracted successfully : '+str(ids))
     price_staus = price_filter(ids, price, 5)
-    
+    print(ids,price_staus)
     return ids,price_staus
 
 def case_3(item:dict):
@@ -124,7 +125,7 @@ def case_6(item:dict):
     items1 = similarity_search(category, 'category',5,10)
     ids = []
     for doc, score in items1:
-        ids.append({doc.metadata['id']})
+        ids.append(doc.metadata['id'])
 
     price_staus = price_filter(ids, price, 5)
     return ids,price_staus
@@ -137,7 +138,7 @@ def case_7(item:dict):
     items1 = similarity_search(category, 'category', 5, 10)
     ids = []
     for doc, score in items1:
-        ids.append({doc.metadata['id']})
+        ids.append(doc.metadata['id'])
     return ids
 
 # category, description
@@ -170,7 +171,7 @@ def case_9(item:dict):
     items1 = similarity_search(category, 'category', 5, 10)
     ids = []
     for doc, score in items1:
-        ids.append({doc.metadata['id']})
+        ids.append(doc.metadata['id'])
 
     price_staus = price_filter(ids, price, 5)
     return ids,price_staus
@@ -184,7 +185,7 @@ def case_10(item:dict):
     items = similarity_search(description, 'description', 5, 20)
     ids = []
     for doc, score in items:
-        ids.append({doc.metadata['id']})
+        ids.append(doc.metadata['id'])
 
     price_staus = price_filter(ids, price, 5)
     return ids,price_staus
@@ -221,7 +222,7 @@ def case_12(item:dict):
     items = similarity_search(category, 'category', 5, 10)
     ids = []
     for doc, score in items:
-        ids.append({doc.metadata['id']})
+        ids.append(doc.metadata['id'])
     return ids
 
 # price
@@ -242,7 +243,7 @@ def case_14(item:dict):
     items = similarity_search(category, 'category', 5, 10)
     ids = []
     for doc, score in items:
-        ids.append({doc.metadata['id']})
+        ids.append(doc.metadata['id'])
     return ids
 
 # description
@@ -252,7 +253,7 @@ def case_15(item:dict):
     items = similarity_search(description, 'description', 5, 20)
     ids = []
     for doc, score in items:
-        ids.append({doc.metadata['id']})
+        ids.append(doc.metadata['id'])
     return ids
 
 

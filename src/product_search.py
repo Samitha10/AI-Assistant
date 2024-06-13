@@ -3,8 +3,9 @@ import numpy as np
 import os,json, sys
 from langchain_voyageai import VoyageAIEmbeddings
 from langchain_community.vectorstores import FAISS
+from src.data_processor import data_file_importer
+from functools import lru_cache
 
-groq_key = os.environ.get("GROQ_KEY")
 voyage_api_key = os.environ.get("VOYAGE_KEY")
 
 # Creating JSON files from CSV
@@ -23,8 +24,6 @@ def jsonize_data():
         f.write(json_string)
     print("JSON file created successfully!")
 
-
-
 # Save vector store
 def save_vector_store(column:str):
     embedd_model = VoyageAIEmbeddings(voyage_api_key=voyage_api_key, model="voyage-2")
@@ -41,25 +40,83 @@ def save_vector_store(column:str):
     vcstore = FAISS.from_texts(categories,embedd_model,metadatas=metadata)
     vcstore.save_local(f'artifacts/vcstore_{column}')
 
-
-def similarity_search(quection:str, column:str):
+@lru_cache(maxsize=128, typed=False)
+def model_loader():
     embedd_model = VoyageAIEmbeddings(voyage_api_key=voyage_api_key, model="voyage-2")
+    return embedd_model
 
-    # Get the absolute path to the file
+@lru_cache(maxsize=128, typed=False)
+def embedd_loader(column:str):
     store = os.path.join(os.path.dirname(__file__), '..', 'artifacts', f'vcstore_{column}')
-    new_db = FAISS.load_local(store, embedd_model,allow_dangerous_deserialization=True)
+    data = FAISS.load_local(store, model_loader(),allow_dangerous_deserialization=True)
+    return data
 
-    embedd_query = embedd_model.embed_query(quection)
-    result = new_db.similarity_search_with_score_by_vector(embedding=embedd_query, k=5, fetch_k=5)
+@lru_cache(maxsize=128, typed=False)
+def similarity_search(quection:str, column:str,k:int,fetch_k:int):
+    # Load the vector store
+    DATA = embedd_loader(column)    
+    embedd_query = model_loader().embed_query(quection)
+    result = DATA.similarity_search_with_score_by_vector(embedding=embedd_query,k=k,fetch_k=fetch_k)
 
-    # Print to terminal
-    for doc, score in result:
-        print(f"Document ID: {doc.metadata['id']}, Page Content: {doc.page_content}, Score: {score}")
-    # Save to text file
-    path = os.path.join(os.path.dirname(__file__), '..', 'artifacts', f'results_{column}.txt')
-    with open(path, 'w') as f:
-        for doc, score in result:
-            f.write(f"Document ID: {doc.metadata['id']}, Page Content: {doc.page_content}, Score: {score}\n")
+    # # Print to terminal
+    # for doc, score in result:
+    #     print(f"Document ID: {doc.metadata['id']}, Page Content: {doc.page_content}, Score: {score}")
+    # # Save to text file
+    # path = os.path.join(os.path.dirname(__file__), '..', 'artifacts', f'results_{column}.txt')
+    # with open(path, 'w') as f:
+    #     for doc, score in result:
+    #         f.write(f"Document ID: {doc.metadata['id']}, Page Content: {doc.page_content}, Score: {score}\n")
     return result
 
-similarity_search('lip balms','category')
+
+
+
+
+def id_extractor(dict1:dict, dict2:dict,count:int):
+    # Identify common keys
+    common_keys = set(dict1.keys()).intersection(dict2.keys())
+    common_keys = list(common_keys)
+    # If there are more common keys than needed, truncate the list
+    if len(common_keys) > 5:
+        common_keys = common_keys[:5]
+
+    # If the number of common keys is less than 5, add keys with the lowest values from both dictionaries
+    if len(common_keys) < 5:
+        # Get items sorted by value from both dictionaries
+        sorted_dict1_items = sorted(dict1.items(), key=lambda item: item[1])
+        sorted_dict2_items = sorted(dict2.items(), key=lambda item: item[1])
+        
+        # Create a list of all items, excluding the common keys
+        combined_items = sorted_dict1_items + sorted_dict2_items
+        combined_items = [(k, v) for k, v in combined_items if k not in common_keys]
+        
+        # Add keys with the lowest values until we have 5 keys in total
+        for k, v in combined_items:
+            if len(common_keys) >= 5:
+                break
+            common_keys.append(k)
+
+    # Ensure we have exactly 5 keys
+    keys = common_keys[:5]
+    return keys
+
+
+def price_filter(ids: list, price, range: int):
+    df = data_file_importer()
+    results = []
+
+    # Check if price is an integer
+    if not isinstance(price, float):
+        return [True] * len(ids)
+
+    for id in ids:
+        if id in df['id'].values:
+            id_price = df.loc[df['id'] == id, 'price'].values[0]
+            if abs(id_price - price) <= range:
+                results.append(True)
+            else:
+                results.append(False)
+        else:
+            results.append(False)  # Assuming IDs not found should be marked False
+
+    return results

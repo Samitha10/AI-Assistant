@@ -10,11 +10,10 @@ from langchain_core.prompts import (
     HumanMessagePromptTemplate,
     MessagesPlaceholder,)
 
-from product_search import similarity_search
-from image_retriver import image_tracker
-
 # Add the project root to the PYTHONPATH
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from src.recommender import recomendation_selector, recomender
 from utils.logger import logging
 from utils.exception import CustomException
 
@@ -31,18 +30,25 @@ logging.info('Intialize LLM successfully')
 memory_with_user = ConversationBufferWindowMemory(k=5, memory_key="history", return_messages=True)
 memory_of_entity = ConversationBufferWindowMemory(k=5, memory_key="history", return_messages=True)
 
+entities = ['product_category', 'gender', 'price']
+
 def chatter(user_message: str):
+    global entities
+    items = entities
+    print(items)
     try:
         if user_message == "":
             logging.info('User message is empty')
             raise CustomException("User message is empty")
         system_message = '''
             You are a smart and freindly assistant.
-            Your primary goal is to build a friendly conversation to get all the required details stepby step for a product recomendation for cosmetics products.
+            Your primary goal is to build a friendly conversation cunningly to get all the required details stepby step for a product recomendation for cosmetics products.
             Short and sweet conversation is better.
-            Required details are 'product_category', 'gender', 'price'.
-            If your goal is complete, just say 'Thank you'
-        '''
+            Required details are about {items}.
+            If your goal is complete, just say 'Thank you'. Do not repeat the same quection again.
+            Do not provide recomendations based on your traning data and world's data.
+            Do not provide any blah. blahs like your capabilities and limitations. Be a customer care agent
+        '''.format(items=items)
         human_message = user_message
 
 
@@ -59,7 +65,7 @@ def chatter(user_message: str):
         chain = ConversationChain(
             memory=memory_with_user,
             llm=chat,
-            verbose=False,
+            verbose = True,
             prompt=prompt,
         )
 
@@ -86,7 +92,9 @@ def entity_extractor(user_message: str):
             If there is some information about the product, add 'product_description: string' in the answer
             If you got those information from previous chat history remember them and use them.
             If there is no information for a specific area yet, make it 'flag_1'.
-            If user is not specifying relevant information for the area, make it 'flag_2'.
+            If user is not specifyiny or concerning about the information, make it 'flag_2'.
+            Carefully choose between 'flag_1' and 'flag_2'.
+            Do not hesitate to update as 'flag_2' when user is rejecting them, when conversation happens.
             Answer must include JSON formated information. Do not provide additional content in the answer
         '''
         human_message = user_message
@@ -146,65 +154,27 @@ def json_extractor(text:str):
     
 def entity_checker(item):
     null_entities = {}
+    nulls = []
     if item['product_category'] == 'flag_1':
         null_entities['product_category'] = 'flag_1'
+        nulls.append('product_category')
     if item['gender'] == 'flag_1':
         null_entities['gender'] = 'flag_1'
+        nulls.append('gender')
     if item['price'] == 'flag_1':
         null_entities['price'] = 'flag_1'
-    logging.info('Null entities: ', null_entities)
+        nulls.append('price')
+    logging.info('Null entities: '+str(null_entities))
     logging.info('Entity checker completed successfully')
+    global entities
+    entities = nulls
+    print(entities)
     return null_entities
 
-def filter(item:dict):
-    if len(item) == 0:
-        return True
-    else:
-        return False
-
-
-def recomendation_selector(products: dict, item:dict):
-    info_dict={}
-    if filter(item) == True:
-        if products['product_category'] != 'flag_1' :
-            info_dict['product_category'] = products['product_category']
-        if products['gender'] != 'flag_1':
-            info_dict['gender'] = products['gender']
-        if products['price'] != 'flag_1':
-            info_dict['price'] = products['price']
-        if products['product_description'] != 'flag_1':
-            info_dict['product_description'] = products['product_description']
-        logging.info('Recomendation selector: ', info_dict)
-        logging.info('Recomendation selector completed successfully')
-        return info_dict
-    else:
-        print("There are null entities in the item")
-        logging.info('There are null entities in the item')
-        return False
-
-def recomender(products: dict):
-    try:
-        category = products['product_category']
-        gender = products['gender']
-        price = products['price']
-        
-        # Perform the search based on the extracted information
-        results = similarity_search(category,'category' )
-        output = []
-        for doc, score in results:
-            output.append({doc.metadata['id']})
-        output = [item for sublist in output for item in sublist]
-        print(output)
-        return output
-        
-    except Exception as e:
-        print(e)
-        return False
 
 def main():
     st.subheader("Spa Cylone", divider="rainbow", anchor=False)
     st.sidebar.title("Output")
-
     
         # Initialize chat history if not already done
     if "messages" not in st.session_state:
@@ -226,7 +196,7 @@ def main():
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user", avatar="👨‍💻"):
                 st.markdown(prompt)
-        response = st.session_state.chatter(prompt)
+        response = st.session_state.chatter(user_message=prompt)
 
         # Add the responses to the chat history
         st.session_state.messages.append({"role": "assistant", "content": response})
@@ -247,14 +217,7 @@ def main():
         st.sidebar.write(d)
         if d != False:
             st.sidebar.markdown('## recomender')
-            e = recomender(d)
-            st.sidebar.write(e)
-            image_list, url_list = image_tracker(e)
-            # image_paths = ['product_images/' + name for name in image_list]
-            # st.sidebar.image(image_paths)
-            st.sidebar.markdown('## URL list')
-            st.sidebar.write(url_list)
-
-
+            print(recomender(d))
+            st.sidebar.write(recomender(d))
 
 main()

@@ -1,5 +1,5 @@
-Document ID: p66, Page Content: skin care  comfort, Score: 0.5351611375808716
-Document ID: p11, Page Content: skin care  face care, Score: 0.5571321249008179
-Document ID: p13, Page Content: skin care  face care, Score: 0.5571321249008179
-Document ID: p15, Page Content: skin care  skin wellness, Score: 0.5618281960487366
-Document ID: p30, Page Content: skin care  true turmeric, Score: 0.5676794052124023
+Document ID: p11, Page Content: skin care  face care, Score: 0.38153254985809326
+Document ID: p13, Page Content: skin care  face care, Score: 0.38153254985809326
+Document ID: p66, Page Content: skin care  comfort, Score: 0.4035239517688751
+Document ID: p15, Page Content: skin care  skin wellness, Score: 0.41483014822006226
+Document ID: p73, Page Content: skin care  dosha by face care, Score: 0.41801756620407104
