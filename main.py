@@ -13,7 +13,7 @@ from src.recommender import recomender, chatCompletionChecker, nameExtractor
 from src.product_search import price_extractor
 
 def stchat():
-    st.subheader("Spa Cylone", divider="rainbow", anchor=False)
+    st.subheader("Cosmetics Products", divider="rainbow", anchor=False)
     st.sidebar.title("Output")
     
         # Initialize chat history if not already done

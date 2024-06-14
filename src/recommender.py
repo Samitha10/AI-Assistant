@@ -1,7 +1,7 @@
-import os
-import sys
+import os,sys
 # Add the project root to the PYTHONPATH
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from utils.logger import logging
 from utils.exception import CustomException
 import pandas as pd
@@ -30,6 +30,8 @@ def filters(item:dict):
         return True
     else:
         return False
+    
+    
 def recomendation_selector(products: dict, item:dict):
     info_dict={}
     if filters(item) == True:

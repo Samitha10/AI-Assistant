@@ -2,35 +2,37 @@ import os,sys
 # Add the project root to the PYTHONPATH
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from functools import lru_cache
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_groq import ChatGroq
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationChain
 from langchain_core.messages import SystemMessage
 import os, re, json, sys
-import streamlit as st
 from langchain_core.prompts import (
     ChatPromptTemplate,
     HumanMessagePromptTemplate,
     MessagesPlaceholder,)
-from src.recommender import recomendation_selector, recomender
+
 from utils.logger import logging
 from utils.exception import CustomException
 
 logging.info('Packages are imported successfully')  
 
-# Ensure you have the correct environment variable set
-groq_key = os.environ.get("GROQ_KEY")
-# Initialize the ChatGroq model
-chat = ChatGroq(temperature=0.9, model_name="Llama3-70b-8192", groq_api_key=groq_key)
 
-logging.info('Intialize LLM successfully')
+@lru_cache(maxsize=128, typed=False)
+def chatInitialize():
+    groq_key = os.environ.get("GROQ_KEY")
+    # Initialize the ChatGroq model
+    chat = ChatGroq(temperature=0.9, model_name="Llama3-70b-8192", groq_api_key=groq_key)
+    logging.info('Intialize LLM successfully')
+    return chat
 
-# Initialize the memory object
-memory_with_user = ConversationBufferMemory(memory_key="history", return_messages=True)
-memory_of_entity = ConversationBufferMemory(memory_key="history", return_messages=True)
 
+# Global variables
 entities = ['product_category', 'gender', 'price']
+
+memory_with_user = ConversationBufferMemory(memory_key="history", return_messages=True)
 
 def chatter(user_message: str):
     global entities
@@ -42,10 +44,10 @@ def chatter(user_message: str):
             raise CustomException("User message is empty")
         system_message = '''
             You are a smart and freindly customer care agent
-            Your primary goal is to build a friendly conversation cunningly to get all the required details stepby step for a product recomendation for cosmetics products.
+            Your primary goal is to build a friendly conversation cunningly to get all the required details step by step for a product recomendation for cosmetics products.
             Short and sweet conversation is better.
             Required details are about {items}.
-            If your goal is complete, just say 'Thank you'. Do not repeat the same quection again.
+            If there is no missing fields, just say 'Thank you'. Missing fields : {items}
             Do not provide recomendations based on your traning data and world's data.
             Do not provide any blah. blahs like your capabilities and limitations. Be a customer care agent
         '''.format(items=items)
@@ -64,7 +66,7 @@ def chatter(user_message: str):
         # Create the conversation chain
         chain = ConversationChain(
             memory=memory_with_user,
-            llm=chat,
+            llm=chatInitialize(),
             verbose = True,
             prompt=prompt,
         )
@@ -80,6 +82,8 @@ def chatter(user_message: str):
     except Exception as e:
         logging.info(e)
         raise CustomException(e,sys)
+    
+memory_of_entity = ConversationBufferMemory(memory_key="history", return_messages=True)
 
 def entity_extractor(user_message: str):
     try:
@@ -96,6 +100,7 @@ def entity_extractor(user_message: str):
             Carefully choose between 'flag_1' and 'flag_2'.
             Do not hesitate to update as 'flag_2' when user is rejecting them, when conversation happens.
             Do not hesitate to update product description as well.
+            If user is upto another use case, update infromation respectively.
             Answer must include JSON formated information. Do not provide additional content in the answer
         '''
         human_message = user_message
@@ -112,7 +117,7 @@ def entity_extractor(user_message: str):
         # Create the conversation chain
         chain = ConversationChain(
             memory=memory_of_entity,
-            llm=chat,
+            llm=chatInitialize(),
             verbose=False,
             prompt=prompt,
         )
@@ -129,9 +134,12 @@ def entity_extractor(user_message: str):
         logging.info(e)
         raise CustomException(e, sys)
 
-def json_extractor(text:str):
+def json_extractor(text: str):
     try:
+        # Compile a regular expression pattern to match JSON objects
         json_pattern = re.compile(r'\{.*?\}', re.DOTALL)
+        
+        # Find all matches in the text
         json_matches = json_pattern.findall(text)
 
         # Initialize a list to hold the extracted JSON objects
@@ -144,14 +152,20 @@ def json_extractor(text:str):
                 json_data.append(json_obj)
             except json.JSONDecodeError as e:
                 print(f"Error decoding JSON: {e}")
+                logging.error(f"Error decoding JSON: {e}")
 
-        # Print the extracted JSON data
-        for item in json_data:
-            return item
-        logging.info(f'Extracted JSON data: {json_data}')
+        # Return the last JSON object if the list is not empty
+        if json_data:
+            last_json_obj = json_data[-1]
+            logging.info(f'Extracted JSON data: {last_json_obj}')
+            return last_json_obj
+        else:
+            logging.info('No valid JSON data found')
+            return None
     except Exception as e:
-        logging.info(e)
-        raise CustomException(e,sys)
+        logging.error(e)
+        raise e  # Raise the exception without custom handling to avoid undefined variables
+
     
 def entity_checker(item):
     null_entities = {}

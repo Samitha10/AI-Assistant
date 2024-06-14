@@ -9,6 +9,9 @@ from langchain_community.vectorstores import FAISS
 from src.data_processor import data_file_importer
 from functools import lru_cache
 
+from utils.logger import logging
+from utils.exception import CustomException
+
 
 
 # Creating JSON files from CSV
@@ -62,7 +65,7 @@ def similarity_search(quection:str, column:str,k:int,fetch_k:int):
     DATA = embedd_loader(column)    
     embedd_query = model_loader().embed_query(quection)
     result = DATA.similarity_search_with_score_by_vector(embedding=embedd_query,k=k,fetch_k=fetch_k)
-
+    logging.info(f"Similarity search completed successfully for {column}")
     # # Print to terminal
     # for doc, score in result:
     #     print(f"Document ID: {doc.metadata['id']}, Page Content: {doc.page_content}, Score: {score}")
@@ -75,9 +78,11 @@ def similarity_search(quection:str, column:str,k:int,fetch_k:int):
 
 
 def id_extractor(dict1:dict, dict2:dict,count:int):
+    logging.info("Extracting similar IDs")
     # Identify common keys
     common_keys = set(dict1.keys()).intersection(dict2.keys())
     common_keys = list(common_keys)
+    logging.info(f"Common keys identified: {common_keys}")
     # If there are more common keys than needed, truncate the list
     if len(common_keys) > 5:
         common_keys = common_keys[:5]
@@ -100,6 +105,7 @@ def id_extractor(dict1:dict, dict2:dict,count:int):
 
     # Ensure we have exactly 5 keys
     keys = common_keys[:5]
+    logging.info(f"Final list of keys: {keys}")
     return keys
 
 
@@ -109,8 +115,9 @@ def price_filter(ids: list, price, range: int):
 
     # Check if price is a numeric value (float or int)
     if not isinstance(price, (float, int)):
+        logging.info("Price is not a numeric value.")
         return [True] * len(ids)
-
+    
     for id in ids:
         if id in df['id'].values:
             id_price = df.loc[df['id'] == id, 'price'].values[0]
@@ -121,6 +128,7 @@ def price_filter(ids: list, price, range: int):
         else:
             results.append(False)  # Assuming IDs not found should be marked False
 
+    logging.info(f'Price filter completed successfully for {price} : results: {results}')
     return results
 
 def price_extractor(ids: list):
@@ -131,5 +139,6 @@ def price_extractor(ids: list):
         if id in df['id'].values:
             id_price = df.loc[df['id'] == id, 'price'].values[0]
             results.append(id_price)
+    logging.info(f'Price extraction completed successfully for {ids} : prices: {results}')
     return results
 
